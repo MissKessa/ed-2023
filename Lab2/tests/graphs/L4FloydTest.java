@@ -1,6 +1,10 @@
 package graphs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.Test;
@@ -54,7 +58,6 @@ public class L4FloydTest {
 
 		assertFalse(g1.removeNode('e'));
 
-
 		ElementNotPresentException ex = assertThrows(ElementNotPresentException.class, () -> g1.removeEdge('X', 'A'));
 
 		assertNotEquals(null, ex.getMessage());
@@ -64,7 +67,7 @@ public class L4FloydTest {
 	@Test
 	public void testDFPrint() throws Exception {
 		System.out.println("TEST DEPTH FIRST BEGINS ***");
-		
+
 		Graph<String> g1 = new Graph<String>(4);
 		g1.addNode("A");
 		g1.addNode("B");
@@ -200,7 +203,6 @@ public class L4FloydTest {
 		assertEquals(Graph.INDEX_NOT_FOUND, g.getNode("Ecuador"));
 
 		// No repeated nodes allowed
-
 
 		FullStructureException ex = assertThrows(FullStructureException.class, () -> g.addNode("Venezuela"));
 
@@ -341,7 +343,7 @@ public class L4FloydTest {
 	@Test
 	public void testFloydPathB() throws Exception {
 		System.out.println("TEST PRINT FLOYD PATH B BEGINS ***");
-		
+
 		Graph<String> g1 = new Graph<String>(4);
 		g1.addNode("A");
 		g1.addNode("B");

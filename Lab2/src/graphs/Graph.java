@@ -10,7 +10,8 @@ public class Graph<T> {
 	boolean[][] edges; // adjacency matrix
 	double[][] weights;
 	double[][] A; // A matrix for floyd with the lowest min cost
-	int[][] P; // P matrix store the pivots (the intermediate node to get throught to get the min cost path)
+	int[][] P; // P matrix store the pivots (the intermediate node to get throught to get the
+				// min cost path)
 
 	/**
 	 * 
@@ -260,14 +261,14 @@ public class Graph<T> {
 	public void floyd(int limit) {
 //		if (limit>size)
 		initsFloyd(limit);
-		for(int pivot=0; pivot<limit; pivot++) {
-			for(int from = 0; from < limit; from++) {
-				for(int to = 0; to < limit; to++) {
-					double newCost=A[from][pivot]+A[pivot][to];
-					
-					if(newCost<A[from][to]) {
-						A[from][to]=newCost;
-						P[from][to]=pivot;
+		for (int pivot = 0; pivot < limit; pivot++) {
+			for (int from = 0; from < limit; from++) {
+				for (int to = 0; to < limit; to++) {
+					double newCost = A[from][pivot] + A[pivot][to];
+
+					if (newCost < A[from][to]) {
+						A[from][to] = newCost;
+						P[from][to] = pivot;
 					}
 				}
 			}
@@ -290,27 +291,45 @@ public class Graph<T> {
 		}
 	}
 
-	public double[][] getA() { 
+	public double[][] getA() {
 		return A;
 	}
 
-	public int[][] getP() { 
+	public int[][] getP() {
 		return P;
 	}
 
 	public String printFloydPath(T from, T to) {
-		String result="";
-		//P[from][to]=next;
-		//if next==to return ""
-		//else P[next][to] and repeat
-		
-		//if direcet path returns ""
-		//if not found "NO_PATH_FOUND"
-		return null; //return only the ones in the middle not from and to
+		int indexFromElement = getNode(from); // Retrieve the index of starting node
+		int indexToElement = getNode(to); // Retrieve the index of end node
+		if (indexFromElement == INDEX_NOT_FOUND || indexToElement == INDEX_NOT_FOUND) // Return null if the element is
+																						// not in the graph
+			throw new ElementNotPresentException("The starting node and the final node must be in teh graph");
+
+		floyd(getSize());
+		String path = FPPrint(indexFromElement, indexToElement);
+
+		if (path.contains("_NO_PATH_FOUND_TO_"))
+			return "_NO_PATH_FOUND_TO_";
+		// System.out.println("" + null); =null
+		return path;
 	}
-	
-	private String FPPrint() {
-		return null;
+
+	private String FPPrint(int indexFromElement, int indexToElement) {
+		String path = "";
+
+		int pivotIndex = P[indexFromElement][indexToElement];
+		if (pivotIndex == EMPTY) {
+			if (A[indexFromElement][indexToElement] != INFINITE)
+				return "" /* + nodes[indexFromElement] */;
+			return "_NO_PATH_FOUND_TO_";
+		}
+		if (!existsEdge(nodes[indexFromElement], nodes[pivotIndex])) {
+			path += FPPrint(indexFromElement, pivotIndex);
+		}
+
+		path += nodes[pivotIndex] + FPPrint(pivotIndex, indexToElement);
+		return path;
 	}
 
 }
