@@ -1,8 +1,9 @@
 package graphs;
 
 public class Graph<T> {
-	public static final int INDEX_NOT_FOUND = -1;
-	public static final int EMPTY = -1;
+	public static final int UNREACHABLE_NODE = -1;
+	public static final int INDEX_NOT_FOUND = UNREACHABLE_NODE;
+	public static final int EMPTY = UNREACHABLE_NODE;
 	public static final double INFINITE = Double.POSITIVE_INFINITY; // Infinite cost (the arrival node cannot be reached
 																	// from the starting node)
 	int size;
@@ -258,6 +259,10 @@ public class Graph<T> {
 		return path;
 	}
 
+	/**
+	 * Initializes the A and P matrix for floyd. 
+	 * @param limit
+	 */
 	public void floyd(int limit) {
 //		if (limit>size)
 		initsFloyd(limit);
@@ -306,7 +311,7 @@ public class Graph<T> {
 																						// not in the graph
 			throw new ElementNotPresentException("The starting node and the final node must be in teh graph");
 
-		floyd(getSize());
+		//floyd(getSize());
 		String path = FPPrint(indexFromElement, indexToElement);
 
 		if (path.contains("_NO_PATH_FOUND_TO_"))
@@ -315,7 +320,7 @@ public class Graph<T> {
 		return path;
 	}
 
-	private String FPPrint(int indexFromElement, int indexToElement) {
+	private String FPPrint(int indexFromElement, int indexToElement) { //exponenial complexity
 		String path = "";
 
 		int pivotIndex = P[indexFromElement][indexToElement];
@@ -330,6 +335,108 @@ public class Graph<T> {
 
 		path += nodes[pivotIndex] + FPPrint(pivotIndex, indexToElement);
 		return path;
+	}
+	
+	/**
+	 * Initializes the array d and pD for dijkstra
+	 * @param d
+	 * @param pD
+	 * @param startIndex
+	 */
+	/*
+	 * Complexity: O(size)
+	 */
+	public void initsDijkstra(double[] d, int[] pD, int startIndex) { //d and pD are instantiated already (fill with 0s)
+		for (int to=0; to<size; to++) {
+			if(edges[startIndex][to]) {
+				d[to]=weights[startIndex][to];
+				pD[to]=startIndex;
+			} else {
+				d[to]=INFINITE;
+				pD[to]=EMPTY;
+			}
+		}
+		d[startIndex]=0;
+		pD[startIndex]=startIndex;
+	}
+
+	/*
+	 * Complexity: O(size^2)
+	 */
+	public DijkstraDataClass dijkstra(T start) { //return an object with all the information we want to return because Java doesn't allow multiple returns: return d, pD
+		if (getNode(start)== INDEX_NOT_FOUND)
+			return null;
+		double[] d = new double[getSize()];
+		int[] pD = new int[getSize()];
+		int startIndex =getNode(start);
+		
+		initsDijkstra(d, pD, startIndex);
+		boolean[] s = new boolean[getSize()];
+		
+		s[startIndex]=true;
+		
+		int pivot = getPivot(s, d); //returns the index of the best pivot: cheapest reach from the start, and has not been used et. It returns -1 when they are not more valid pivots (when S is all trues, or a node that cannot reached)
+		while (pivot!=EMPTY) { // O(Reachable nodes -1): it's going to be more linear if here is a few of reachables nodes. it will be exponential if
+			s[pivot]=true;
+			for (int to=0; to<size; to++) {
+				double newCost = d[pivot]+weights[pivot][to];
+				double oldCost =d[to];
+				
+				if (edges[pivot][to] && oldCost>newCost) {
+					d[to]=newCost;
+					pD[to]=pivot;
+				}
+			}
+			pivot = getPivot(s,d); //update pivot
+		}
+		
+		return new DijkstraDataClass(getSize(), startIndex,d, pD);
+	}
+
+	private int getPivot(boolean[] s, double[] d) { //O(size)
+		int indexPivot=EMPTY;
+		double costPivot=INFINITE;
+		
+		for (int i = 0; i<s.length;i++) {
+			if (s[i])
+				continue;
+			if (d[i]<costPivot) {
+				costPivot = d[i];
+				indexPivot = i;	
+			}			
+		}
+		return indexPivot;
+	}
+	
+	public boolean isSourceNode(T node) {
+		int indexNode = getNode(node);
+		if (indexNode== INDEX_NOT_FOUND)
+			throw new IllegalArgumentException("The node is not in the graph");
+		
+		boolean hasChildren=false;
+		for (int i=0; i<nodes.length ; i++) {
+			if (edges[i][indexNode]) //cannot have parent
+				return false;
+			if (edges[indexNode][i]) //must have children
+				hasChildren=true;
+		}
+		return hasChildren;
+	}
+	
+	public boolean isDrainNode(T node) {
+		int indexNode = getNode(node);
+		if (indexNode== INDEX_NOT_FOUND)
+			throw new IllegalArgumentException("The node is not in the graph");
+		
+		boolean hasParent=false;
+		for (int i=0; i<nodes.length ; i++) {
+			if (edges[indexNode][i]) //cannot have children
+				return false;
+			
+			if (edges[i][indexNode]) //must have a parent
+				hasParent=true;
+		}
+		return hasParent;
 	}
 
 }
